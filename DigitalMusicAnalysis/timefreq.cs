@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Numerics;
+using System.Diagnostics;
 
 namespace DigitalMusicAnalysis
 {
     public class timefreq
     {
+        Stopwatch stftTimer = new Stopwatch();
         public float[][] timeFreqData;
         public int wSamp;
+        public static double stftWatch;
         public Complex[] twiddles;
 
         public timefreq(float[] x, int windowSamp)
@@ -59,6 +62,8 @@ namespace DigitalMusicAnalysis
 
         float[][] stft(Complex[] x, int wSamp)
         {
+            stftTimer.Start();
+
             int ii = 0;
             int jj = 0;
             int kk = 0;
@@ -107,6 +112,8 @@ namespace DigitalMusicAnalysis
                 }
             }
 
+            stftTimer.Stop();
+            stftWatch = stftTimer.Elapsed.TotalSeconds;
             return Y;
         }
 

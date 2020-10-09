@@ -14,7 +14,7 @@ using System.Xml;
 using System.Diagnostics;
 using System.Runtime.ConstrainedExecution;
 
-namespace DigitalMusicAnalysis
+namespace DigitalMusicAnalysis  
 {
     public partial class MainWindow : Window
     {
@@ -47,10 +47,10 @@ namespace DigitalMusicAnalysis
             // Timer for load wave  
             var loadwaveTimer = new Stopwatch();
             loadwaveTimer.Start();
-            Console.WriteLine("loadWave function timer counter start \n");
+            //Console.WriteLine("loadWave function timer counter start \n");
             loadWave(filename);
             loadwaveTimer.Stop();
-            Console.WriteLine("loadWave function timer counter stop. Execution Time: {0} secs \n", loadwaveTimer.Elapsed);
+            //Console.WriteLine("loadWave function timer counter stop. Execution Time: {0} secs \n", loadwaveTimer.Elapsed);
 
 
             // Timer for freqDomain  
@@ -63,46 +63,46 @@ namespace DigitalMusicAnalysis
 
             // Timer for sheetmusic 
             var sheetMusicTimer = new Stopwatch();
-            Console.WriteLine("sheetMusic function timer counter start \n");
+            //Console.WriteLine("sheetMusic function timer counter start \n");
             sheetMusicTimer.Start();
             sheetmusic = readXML(xmlfile);
             sheetMusicTimer.Stop();
-            Console.WriteLine("sheetMusic  function timer counter stop. Execution Time: {0} secs \n", sheetMusicTimer.Elapsed);
+            //Console.WriteLine("sheetMusic  function timer counter stop. Execution Time: {0} secs \n", sheetMusicTimer.Elapsed);
 
 
             // Timer for onSetDetection
             var onSetDetectionTimer = new Stopwatch();
-            Console.WriteLine("onsetDetection function timer counter start \n");
+            //Console.WriteLine("onsetDetection function timer counter start \n");
             onSetDetectionTimer.Start();
             onsetDetection();
             onSetDetectionTimer.Stop();
-            Console.WriteLine("\nonsetDetection  function timer counter stop. Execution Time: {0} secs \n", onSetDetectionTimer.Elapsed);
+            //Console.WriteLine("\nonsetDetection  function timer counter stop. Execution Time: {0} secs \n", onSetDetectionTimer.Elapsed);
 
 
             // Timer for loadImage
             var loadImageTimer = new Stopwatch();
-            Console.WriteLine("loadImage function timer counter start \n");
+            //Console.WriteLine("loadImage function timer counter start \n");
             loadImageTimer.Start();
             loadImage();
             loadImageTimer.Stop();
-            Console.WriteLine("loadImage function timer counter stop. Execution Time: {0} secs \n", loadImageTimer.Elapsed);
+            //Console.WriteLine("loadImage function timer counter stop. Execution Time: {0} secs \n", loadImageTimer.Elapsed);
 
             // Timer for loadHistogram
-            Console.WriteLine("loadHistogram function timer counter start \n");
+            //Console.WriteLine("loadHistogram function timer counter start \n");
             var loadHistogramTimer = new Stopwatch();
             loadHistogramTimer.Start(); 
             loadHistogram();  
             loadHistogramTimer.Stop(); 
-            Console.WriteLine("loadHistogram function timer counter stop. Execution Time: {0} secs \n", loadHistogramTimer.Elapsed);
+            //Console.WriteLine("loadHistogram function timer counter stop. Execution Time: {0} secs \n", loadHistogramTimer.Elapsed);
 
 
             // Timer for Playback
             var playbackTimer = new Stopwatch();
-            Console.WriteLine("playbackTimer function timer counter start \n");
+            //Console.WriteLine("playbackTimer function timer counter start \n");
             playbackTimer.Start();
             playBack();
             playbackTimer.Stop();
-            Console.WriteLine("playbackTimer function timer counter stop. Execution Time: {0} secs \n", playbackTimer.Elapsed);
+            //Console.WriteLine("playbackTimer function timer counter stop. Execution Time: {0} secs \n", playbackTimer.Elapsed);
 
 
             check.Start();
@@ -110,6 +110,8 @@ namespace DigitalMusicAnalysis
             button2.Click += zoomOUT;
 
             executionTimer.Stop();
+            string stfttimer = string.Format("STFT function time taken : {0} secs", timefreq.stftWatch);
+            Console.WriteLine(stfttimer);
             Console.WriteLine("DigitalMusicAnalysis Program timer counter stop. Execution Time: {0} secs \n", executionTimer.Elapsed);
             slider1.ValueChanged += updateHistogram;
             playback.PlaybackStopped += closeMusic;
@@ -338,20 +340,13 @@ namespace DigitalMusicAnalysis
                 }
             }
 
-            //foreach (var item in pixelArray)
-            //{
-            //    string data = item.ToString();
-
-            //}
-
+            
 
             //using (var outf = new StreamWriter("datafreq.txt"))
             //    for (int i = 0; i < pixelArray.Length; i++)
             //        outf.WriteLine(pixelArray[i].ToString());
 
-         
-
-
+       
         }
 
         // Onset Detection function - Determines Start and Finish times of a note and the frequency of the note over each duration.
@@ -1189,10 +1184,10 @@ namespace DigitalMusicAnalysis
                 jj = jj - 1;
             }
 
-            System.Console.Out.Write("\n\n----------------  String Matching ------------------\n\n");
+            //System.Console.Out.Write("\n\n----------------  String Matching ------------------\n\n");
 
-            System.Console.Out.Write(AlignA + "\n");
-            System.Console.Out.Write(AlignB + "\n");
+            //System.Console.Out.Write(AlignA + "\n");
+            //System.Console.Out.Write(AlignB + "\n");
 
             string[] returnArray = new string[2];
 
