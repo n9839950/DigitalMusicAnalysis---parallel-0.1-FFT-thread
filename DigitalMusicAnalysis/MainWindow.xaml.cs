@@ -12,6 +12,7 @@ using System.Numerics;
 using NAudio.Wave;
 using System.Xml;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Runtime.ConstrainedExecution;
 
 namespace DigitalMusicAnalysis  
@@ -27,6 +28,7 @@ namespace DigitalMusicAnalysis
         private Complex[] twiddles;
         private Complex[] compX;
         private string filename;
+        ParallelOptions parallelProgram = new ParallelOptions();
      
         private enum pitchConv { C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B };
         private double bpm = 70;
@@ -55,11 +57,11 @@ namespace DigitalMusicAnalysis
 
             // Timer for freqDomain  
             var freqDomainTimer = new Stopwatch();
-            Console.WriteLine("freqDomain function timer counter start \n");
+            //Console.WriteLine("freqDomain function timer counter start \n");
             freqDomainTimer.Start();
             freqDomain();
             freqDomainTimer.Stop();
-            Console.WriteLine("freqDomain function timer counter stop. Execution Time: {0} secs \n", freqDomainTimer.Elapsed);
+            //Console.WriteLine("freqDomain function timer counter stop. Execution Time: {0} secs \n", freqDomainTimer.Elapsed);
 
             // Timer for sheetmusic 
             var sheetMusicTimer = new Stopwatch();
@@ -72,11 +74,11 @@ namespace DigitalMusicAnalysis
 
             // Timer for onSetDetection
             var onSetDetectionTimer = new Stopwatch();
-            //Console.WriteLine("onsetDetection function timer counter start \n");
+            Console.WriteLine("onsetDetection function timer counter start \n");
             onSetDetectionTimer.Start();
             onsetDetection();
             onSetDetectionTimer.Stop();
-            //Console.WriteLine("\nonsetDetection  function timer counter stop. Execution Time: {0} secs \n", onSetDetectionTimer.Elapsed);
+            Console.WriteLine("\nonsetDetection  function timer counter stop. Execution Time: {0} secs \n", onSetDetectionTimer.Elapsed);
 
 
             // Timer for loadImage
@@ -110,9 +112,15 @@ namespace DigitalMusicAnalysis
             button2.Click += zoomOUT;
 
             executionTimer.Stop();
+
             string stfttimer = string.Format("STFT function time taken : {0} secs", timefreq.stftWatch);
             Console.WriteLine(stfttimer);
             Console.WriteLine("DigitalMusicAnalysis Program timer counter stop. Execution Time: {0} secs \n", executionTimer.Elapsed);
+
+            writingparalleldata();
+            bool a = FileEquals("C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq.txt",
+               "C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq_parallel0.1.txt");
+            Console.WriteLine(a);
             slider1.ValueChanged += updateHistogram;
             playback.PlaybackStopped += closeMusic;
 
@@ -339,14 +347,31 @@ namespace DigitalMusicAnalysis
                     pixelArray[jj * stftRep.timeFreqData[0].Length + ii] = stftRep.timeFreqData[jj][ii];
                 }
             }
-
             
-
-            //using (var outf = new StreamWriter("datafreq.txt"))
+            //using (var outf = new StreamWriter("datafreq_parallel0.1.txt"))
             //    for (int i = 0; i < pixelArray.Length; i++)
             //        outf.WriteLine(pixelArray[i].ToString());
+             
 
-       
+        }
+
+        private void writingparalleldata()
+        {
+            stftRep = new timefreq(waveIn.wave, 2048);
+            pixelArray = new float[stftRep.timeFreqData[0].Length * stftRep.wSamp / 2];
+            for (int jj = 0; jj < stftRep.wSamp / 2; jj++)
+            {
+                for (int ii = 0; ii < stftRep.timeFreqData[0].Length; ii++)
+                {
+                    pixelArray[jj * stftRep.timeFreqData[0].Length + ii] = stftRep.timeFreqData[jj][ii];
+                }
+            }
+
+            using (var outf = new StreamWriter("datafreq_parallel0.1.txt"))
+                for (int i = 0; i < pixelArray.Length; i++)
+                    outf.WriteLine(pixelArray[i].ToString());
+
+
         }
 
         // Onset Detection function - Determines Start and Finish times of a note and the frequency of the note over each duration.
@@ -376,16 +401,19 @@ namespace DigitalMusicAnalysis
             SolidColorBrush ErrorBrush = new SolidColorBrush(Colors.Red);
             SolidColorBrush whiteBrush = new SolidColorBrush(Colors.White);
 
+            /* HFC PARALLEL LOOPS */
+
             HFC = new float[stftRep.timeFreqData[0].Length];
 
-            for (int jj = 0; jj < stftRep.timeFreqData[0].Length; jj++)
+            Parallel.For(0, stftRep.timeFreqData[0].Length, parallelProgram, jj =>
+            //for (int jj = 0; jj < stftRep.timeFreqData[0].Length; jj++)
             {
                 for (int ii = 0; ii < stftRep.wSamp / 2; ii++)
                 {
                     HFC[jj] = HFC[jj] + (float)Math.Pow((double)stftRep.timeFreqData[ii][jj] * ii, 2);
                 }
 
-            }
+            });
 
             float maxi = HFC.Max();
 
@@ -1196,6 +1224,30 @@ namespace DigitalMusicAnalysis
 
             return returnArray;
         }
+
+        static bool FileEquals(string path1, string path2)
+        {
+            byte[] file1 = File.ReadAllBytes(path1);
+            byte[] file2 = File.ReadAllBytes(path2);
+
+            if (file1.Length == file2.Length)
+            {
+                for (int i = 0; i < file1.Length; i++)
+                {
+                    if (file1[i] != file2[i])
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            return false;
+
+           
+        }
+
+
 
     }
 
