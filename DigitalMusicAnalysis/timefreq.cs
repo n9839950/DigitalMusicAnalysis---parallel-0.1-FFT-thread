@@ -79,9 +79,16 @@ namespace DigitalMusicAnalysis
             {
                 Y[ll] = new float[2 * (int)Math.Floor((double)N / (double)wSamp)];
             }
-            
-            
-           // Parallel.For(0, 2* Math.Floor((double)N/(double)wSamp) - 1 , () => 0f, 
+
+
+            // Parallel.For(0, 2* Math.Floor((double)N/(double)wSamp) - 1 , () => 0f, 
+
+            //Thread implementation
+
+           // Thread[] fftThreads = new Thread[MainWindow.numThreads];
+
+            // for (int i = 0; i<MainWindow.numThreads; i++)
+
             for (int ii = 0; ii < 2 * Math.Floor((double)N / (double)wSamp) - 1; ii++)
             {
                 Complex[] temp = new Complex[wSamp];
@@ -92,6 +99,7 @@ namespace DigitalMusicAnalysis
                     temp[jj] = x[ii * (wSamp / 2) + jj];
                 }
 
+                
                 tempFFT = fft(temp);
 
                 for (kk = 0; kk < wSamp / 2; kk++)

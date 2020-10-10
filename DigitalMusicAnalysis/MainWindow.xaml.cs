@@ -28,13 +28,23 @@ namespace DigitalMusicAnalysis
         private Complex[] twiddles;
         private Complex[] compX;
         private string filename;
-        ParallelOptions parallelProgram = new ParallelOptions();
+        public static int numThreads; /// <summary>
+        /// / This num of threads variable needs to be changed
+        /// </summary>
+        ParallelOptions parallelProgram = new ParallelOptions { MaxDegreeOfParallelism = 1}; 
+        /// <summary>
+        /// change this orientation
+        /// </summary>
      
         private enum pitchConv { C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B };
         private double bpm = 70;
 
         public MainWindow()
         {
+
+            //numThreads = (Environment.ProcessorCount / Environment.ProcessorCount) * 2; // This naming convention also needs to be changed !!!!!!  
+            
+
             InitializeComponent();
             filename = openFile("Select Audio (wav) file");
             string xmlfile = openFile("Select Score (xml) file");
@@ -47,11 +57,11 @@ namespace DigitalMusicAnalysis
 
 
             // Timer for load wave  
-            var loadwaveTimer = new Stopwatch();
-            loadwaveTimer.Start();
+            //var loadwaveTimer = new Stopwatch();
+            //loadwaveTimer.Start();
             //Console.WriteLine("loadWave function timer counter start \n");
             loadWave(filename);
-            loadwaveTimer.Stop();
+            //loadwaveTimer.Stop();
             //Console.WriteLine("loadWave function timer counter stop. Execution Time: {0} secs \n", loadwaveTimer.Elapsed);
 
 
@@ -64,12 +74,9 @@ namespace DigitalMusicAnalysis
             //Console.WriteLine("freqDomain function timer counter stop. Execution Time: {0} secs \n", freqDomainTimer.Elapsed);
 
             // Timer for sheetmusic 
-            var sheetMusicTimer = new Stopwatch();
-            //Console.WriteLine("sheetMusic function timer counter start \n");
-            sheetMusicTimer.Start();
+          
             sheetmusic = readXML(xmlfile);
-            sheetMusicTimer.Stop();
-            //Console.WriteLine("sheetMusic  function timer counter stop. Execution Time: {0} secs \n", sheetMusicTimer.Elapsed);
+ 
 
 
             // Timer for onSetDetection
@@ -82,29 +89,20 @@ namespace DigitalMusicAnalysis
 
 
             // Timer for loadImage
-            var loadImageTimer = new Stopwatch();
-            //Console.WriteLine("loadImage function timer counter start \n");
-            loadImageTimer.Start();
+          
             loadImage();
-            loadImageTimer.Stop();
-            //Console.WriteLine("loadImage function timer counter stop. Execution Time: {0} secs \n", loadImageTimer.Elapsed);
+ 
 
             // Timer for loadHistogram
-            //Console.WriteLine("loadHistogram function timer counter start \n");
-            var loadHistogramTimer = new Stopwatch();
-            loadHistogramTimer.Start(); 
+        
             loadHistogram();  
-            loadHistogramTimer.Stop(); 
-            //Console.WriteLine("loadHistogram function timer counter stop. Execution Time: {0} secs \n", loadHistogramTimer.Elapsed);
+    
 
 
             // Timer for Playback
-            var playbackTimer = new Stopwatch();
-            //Console.WriteLine("playbackTimer function timer counter start \n");
-            playbackTimer.Start();
+   
             playBack();
-            playbackTimer.Stop();
-            //Console.WriteLine("playbackTimer function timer counter stop. Execution Time: {0} secs \n", playbackTimer.Elapsed);
+       
 
 
             check.Start();
@@ -113,13 +111,13 @@ namespace DigitalMusicAnalysis
 
             executionTimer.Stop();
 
-            string stfttimer = string.Format("STFT function time taken : {0} secs", timefreq.stftWatch);
-            Console.WriteLine(stfttimer);
+            //string stfttimer = string.Format("STFT function time taken : {0} secs", timefreq.stftWatch);
+            //Console.WriteLine(stfttimer);
             Console.WriteLine("DigitalMusicAnalysis Program timer counter stop. Execution Time: {0} secs \n", executionTimer.Elapsed);
 
             writingparalleldata();
-            bool a = FileEquals("C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq.txt",
-               "C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq_parallel0.1.txt");
+            bool a = FileEquals("C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq.txt",
+               "C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq_parallel0.1.txt");
             Console.WriteLine(a);
             slider1.ValueChanged += updateHistogram;
             playback.PlaybackStopped += closeMusic;
@@ -347,12 +345,7 @@ namespace DigitalMusicAnalysis
                     pixelArray[jj * stftRep.timeFreqData[0].Length + ii] = stftRep.timeFreqData[jj][ii];
                 }
             }
-            
-            //using (var outf = new StreamWriter("datafreq_parallel0.1.txt"))
-            //    for (int i = 0; i < pixelArray.Length; i++)
-            //        outf.WriteLine(pixelArray[i].ToString());
-             
-
+           
         }
 
         private void writingparalleldata()
@@ -388,7 +381,7 @@ namespace DigitalMusicAnalysis
             List<int> noteStops;
             List<double> pitches;
 
-            int ll;
+            //int ll;
             double pi = 3.14159265;
             Complex i = Complex.ImaginaryOne;
 
@@ -405,7 +398,7 @@ namespace DigitalMusicAnalysis
 
             HFC = new float[stftRep.timeFreqData[0].Length];
 
-            Parallel.For(0, stftRep.timeFreqData[0].Length, parallelProgram, jj =>
+            Parallel.For(0, stftRep.timeFreqData[0].Length, parallelProgram ,jj =>
             //for (int jj = 0; jj < stftRep.timeFreqData[0].Length; jj++)
             {
                 for (int ii = 0; ii < stftRep.wSamp / 2; ii++)
@@ -416,7 +409,7 @@ namespace DigitalMusicAnalysis
             });
 
             float maxi = HFC.Max();
-
+             
             for (int jj = 0; jj < stftRep.timeFreqData[0].Length; jj++)
             {
                 HFC[jj] = (float)Math.Pow((HFC[jj] / maxi), 2);
@@ -462,11 +455,20 @@ namespace DigitalMusicAnalysis
             {
                 int nearest = (int)Math.Pow(2, Math.Ceiling(Math.Log(lengths[mm], 2)));
                 twiddles = new Complex[nearest];
-                for (ll = 0; ll < nearest; ll++)
+
+
+                Parallel.For(0, nearest, parallelProgram, ll =>
                 {
                     double a = 2 * pi * ll / (double)nearest;
                     twiddles[ll] = Complex.Pow(Complex.Exp(-i), (float)a);
-                }
+                });
+
+
+                //for (int ll = 0; ll < nearest; ll++)
+                //{
+                //    double a = 2 * pi * ll / (double)nearest;
+                //    twiddles[ll] = Complex.Pow(Complex.Exp(-i), (float)a);
+                //}
 
                 compX = new Complex[nearest];
                 for (int kk = 0; kk < nearest; kk++)
