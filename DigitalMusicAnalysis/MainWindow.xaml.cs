@@ -28,10 +28,10 @@ namespace DigitalMusicAnalysis
         private Complex[] twiddles;
         private Complex[] compX;
         private string filename;
-        public static int numThreads; /// <summary>
+        public static int numThreads = 4; /// <summary>
         /// / This num of threads variable needs to be changed
         /// </summary>
-        ParallelOptions parallelProgram = new ParallelOptions { MaxDegreeOfParallelism = 1}; 
+        ParallelOptions parallelProgram = new ParallelOptions { MaxDegreeOfParallelism = numThreads}; 
         /// <summary>
         /// change this orientation
         /// </summary>
@@ -116,8 +116,11 @@ namespace DigitalMusicAnalysis
             Console.WriteLine("DigitalMusicAnalysis Program timer counter stop. Execution Time: {0} secs \n", executionTimer.Elapsed);
 
             writingparalleldata();
-            bool a = FileEquals("C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq.txt",
-               "C:\\Users\\Manan\\Documents\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq_parallel0.1.txt");
+            bool a = FileEquals("C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq.txt",
+               "C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq_parallel0.1.txt");
+
+        
+
             Console.WriteLine(a);
             slider1.ValueChanged += updateHistogram;
             playback.PlaybackStopped += closeMusic;
@@ -1238,6 +1241,7 @@ namespace DigitalMusicAnalysis
                 {
                     if (file1[i] != file2[i])
                     {
+                        Console.WriteLine("File not same");
                         return false;
                     }
                 }

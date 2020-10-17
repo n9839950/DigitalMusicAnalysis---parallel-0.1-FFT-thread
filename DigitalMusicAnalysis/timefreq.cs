@@ -8,11 +8,23 @@ namespace DigitalMusicAnalysis
 {
     public class timefreq
     {
-        Stopwatch stftTimer = new Stopwatch();
+        //Stopwatch stftTimer = new Stopwatch();
+        //public float[][] timeFreqData;
+        //public int wSamp;
+        //public static double stftWatch;
+        //public Complex[] twiddles;
         public float[][] timeFreqData;
         public int wSamp;
-        public static double stftWatch;
-        public Complex[] twiddles;
+        private float[][] Y;
+        private int N;
+        private Complex[] xx;
+        //private FFT fft = new FFT();
+        private Complex[] twiddles;
+        private float fftMax;
+        private int size;
+        private int blockSize;
+        private Stopwatch sw = new Stopwatch();
+        public static double timeTakenSTFT;
 
         public timefreq(float[] x, int windowSamp)
         {
@@ -62,47 +74,134 @@ namespace DigitalMusicAnalysis
             	
         } // All there is no data dependencies between three loops
 
+        //float[][] stft(Complex[] x, int wSamp)
+        //{
+        //    stftTimer.Start();
+
+        //    //int ii = 0;
+        //    //int jj = 0;
+        //    int kk = 0;
+        //    int ll = 0;
+        //    int N = x.Length;
+        //    float fftMax = 0;
+
+        //    float[][] Y = new float[wSamp / 2][];
+
+        //    for (ll = 0; ll < wSamp / 2; ll++)
+        //    {
+        //        Y[ll] = new float[2 * (int)Math.Floor((double)N / (double)wSamp)];
+        //    }
+
+
+        //    // Parallel.For(0, 2* Math.Floor((double)N/(double)wSamp) - 1 , () => 0f, 
+
+        //    //Thread implementation
+
+        //   Thread[] fftThreads = new Thread[MainWindow.numThreads];
+        //   for (int i = 0; i<MainWindow.numThreads; i++)
+
+        //    for (int ii = 0; ii < 2 * Math.Floor((double)N / (double)wSamp) - 1; ii++)
+        //    {
+        //        Complex[] temp = new Complex[wSamp];
+        //        Complex[] tempFFT = new Complex[wSamp];
+
+        //        for (int jj = 0; jj < wSamp; jj++)
+        //        {
+        //            temp[jj] = x[ii * (wSamp / 2) + jj];
+        //        }
+
+
+        //        tempFFT = fft(temp);
+
+        //        for (kk = 0; kk < wSamp / 2; kk++)
+        //        {
+        //            Y[kk][ii] = (float)Complex.Abs(tempFFT[kk]);
+
+        //            if (Y[kk][ii] > fftMax)
+        //            {
+        //                fftMax = Y[kk][ii];
+        //            }
+        //        }
+
+
+        //    }
+
+        //    for (int ii = 0; ii < 2 * Math.Floor((double)N / (double)wSamp) - 1; ii++)
+        //    {
+        //        for (kk = 0; kk < wSamp / 2; kk++)
+        //        {
+        //            Y[kk][ii] /= fftMax;
+        //        }
+        //    }
+
+        //    stftTimer.Stop();
+        //    stftWatch = stftTimer.Elapsed.TotalSeconds;
+        //    return Y;
+        //}
+
         float[][] stft(Complex[] x, int wSamp)
         {
-            stftTimer.Start();
 
-            //int ii = 0;
-            //int jj = 0;
-            int kk = 0;
-            int ll = 0;
-            int N = x.Length;
-            float fftMax = 0;
-            
-            float[][] Y = new float[wSamp / 2][];
+            N = x.Length;
+            xx = x;
+            fftMax = 0;
+            size = 2 * (int)Math.Floor(N / (double)wSamp);
+            blockSize = (size - 1 + MainWindow.numThreads - 1) / MainWindow.numThreads;
 
-            for (ll = 0; ll < wSamp / 2; ll++)
+            Y = new float[wSamp / 2][];
+
+            Parallel.For(0, wSamp / 2, new ParallelOptions { MaxDegreeOfParallelism = MainWindow.numThreads }, ll =>
             {
                 Y[ll] = new float[2 * (int)Math.Floor((double)N / (double)wSamp)];
+            });
+
+           
+
+            Thread[] fftThreads = new Thread[MainWindow.numThreads];
+
+            for (int i = 0; i < MainWindow.numThreads; i++)
+            {
+                int id = i;
+                fftThreads[i] = new Thread(freqSTFT);
+                fftThreads[i].Start(i);
+            }
+            for (int j = 0; j < MainWindow.numThreads; j++)
+            {
+                fftThreads[j].Join();
             }
 
 
-            // Parallel.For(0, 2* Math.Floor((double)N/(double)wSamp) - 1 , () => 0f, 
-
-            //Thread implementation
-
-           // Thread[] fftThreads = new Thread[MainWindow.numThreads];
-
-            // for (int i = 0; i<MainWindow.numThreads; i++)
-
             for (int ii = 0; ii < 2 * Math.Floor((double)N / (double)wSamp) - 1; ii++)
             {
-                Complex[] temp = new Complex[wSamp];
-                Complex[] tempFFT = new Complex[wSamp];
+                for (int kk = 0; kk < wSamp / 2; kk++)
+                {
+                    Y[kk][ii] /= fftMax;
+                }
+            }
 
+            return Y;
+        }
+
+        public void freqSTFT(object threadID)
+        {
+            int id = (int)threadID;
+            int start = id * blockSize;
+            int end = Math.Min(start + blockSize, size - 1);
+            // dependencies
+            Complex[] temp = new Complex[wSamp];
+            Complex[] tempFFT = new Complex[wSamp];
+
+            for (int ii = start; ii < end; ii++)
+            {
                 for (int jj = 0; jj < wSamp; jj++)
                 {
-                    temp[jj] = x[ii * (wSamp / 2) + jj];
+                    temp[jj] = xx[ii * (wSamp / 2) + jj];
                 }
 
-                
+                //tempFFT = FFT.IterativeFFT(temp, wSamp, twiddles);
                 tempFFT = fft(temp);
 
-                for (kk = 0; kk < wSamp / 2; kk++)
+                for (int kk = 0; kk < wSamp / 2; kk++)
                 {
                     Y[kk][ii] = (float)Complex.Abs(tempFFT[kk]);
 
@@ -111,21 +210,7 @@ namespace DigitalMusicAnalysis
                         fftMax = Y[kk][ii];
                     }
                 }
-
-
             }
-
-            for (int ii = 0; ii < 2 * Math.Floor((double)N / (double)wSamp) - 1; ii++)
-            {
-                for (kk = 0; kk < wSamp / 2; kk++)
-                {
-                    Y[kk][ii] /= fftMax;
-                }
-            }
-
-            stftTimer.Stop();
-            stftWatch = stftTimer.Elapsed.TotalSeconds;
-            return Y;
         }
 
         Complex[] fft(Complex[] x)
