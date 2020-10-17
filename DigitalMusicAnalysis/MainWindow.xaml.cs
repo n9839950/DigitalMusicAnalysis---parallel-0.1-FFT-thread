@@ -93,6 +93,8 @@ namespace DigitalMusicAnalysis
             loadImage();
  
 
+
+
             // Timer for loadHistogram
         
             loadHistogram();  
