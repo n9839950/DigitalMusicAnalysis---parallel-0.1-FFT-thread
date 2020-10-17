@@ -28,7 +28,13 @@ namespace DigitalMusicAnalysis
         private Complex[] twiddles;
         private Complex[] compX;
         private string filename;
-        public static int numThreads = 4; /// <summary>
+        public static int numThreads = 1; /// <summary>
+
+        List<int> lengthscomp;
+        List<int> noteStartscomp;
+        List<int> noteStopscomp;
+        List<double> pitchescomp;
+
         /// / This num of threads variable needs to be changed
         /// </summary>
         ParallelOptions parallelProgram = new ParallelOptions { MaxDegreeOfParallelism = numThreads}; 
@@ -118,12 +124,17 @@ namespace DigitalMusicAnalysis
             Console.WriteLine("DigitalMusicAnalysis Program timer counter stop. Execution Time: {0} secs \n", executionTimer.Elapsed);
 
             writingparalleldata();
-            bool a = FileEquals("C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq.txt",
-               "C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Debug\\netcoreapp3.1\\datafreq_parallel0.1.txt");
+            bool a = FileEquals("C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq.txt",
+               "C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq_parallel0.1.txt");
 
-        
+
+            bool b = FileEquals("C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\ondetectiondata.txt",
+               "C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\ondetectiondata_parallel.txt");
+
+
 
             Console.WriteLine(a);
+            Console.WriteLine(b);
             slider1.ValueChanged += updateHistogram;
             playback.PlaybackStopped += closeMusic;
 
@@ -353,24 +364,7 @@ namespace DigitalMusicAnalysis
            
         }
 
-        private void writingparalleldata()
-        {
-            stftRep = new timefreq(waveIn.wave, 2048);
-            pixelArray = new float[stftRep.timeFreqData[0].Length * stftRep.wSamp / 2];
-            for (int jj = 0; jj < stftRep.wSamp / 2; jj++)
-            {
-                for (int ii = 0; ii < stftRep.timeFreqData[0].Length; ii++)
-                {
-                    pixelArray[jj * stftRep.timeFreqData[0].Length + ii] = stftRep.timeFreqData[jj][ii];
-                }
-            }
-
-            using (var outf = new StreamWriter("datafreq_parallel0.1.txt"))
-                for (int i = 0; i < pixelArray.Length; i++)
-                    outf.WriteLine(pixelArray[i].ToString());
-
-
-        }
+     
 
         // Onset Detection function - Determines Start and Finish times of a note and the frequency of the note over each duration.
 
@@ -721,6 +715,49 @@ namespace DigitalMusicAnalysis
 
                 Canvas.SetTop(timeRect[ii], 200);
                 noteStaff.Children.Insert(ii, timeRect[ii]);
+            }
+
+            lengthscomp = lengths;
+            noteStartscomp = noteStarts;
+            noteStopscomp = noteStops;
+            pitchescomp = pitches;
+
+        }
+        private void writingparalleldata()
+        {
+            stftRep = new timefreq(waveIn.wave, 2048);
+            pixelArray = new float[stftRep.timeFreqData[0].Length * stftRep.wSamp / 2];
+            for (int jj = 0; jj < stftRep.wSamp / 2; jj++)
+            {
+                for (int ii = 0; ii < stftRep.timeFreqData[0].Length; ii++)
+                {
+                    pixelArray[jj * stftRep.timeFreqData[0].Length + ii] = stftRep.timeFreqData[jj][ii];
+                }
+            }
+
+            using (var outf = new StreamWriter("datafreq_parallel.txt.txt"))
+                
+            {
+                for (int i = 0; i < pixelArray.Length; i++)
+                    outf.WriteLine(pixelArray[i].ToString());
+
+            }
+
+            using (var outf = new StreamWriter("ondetectiondata_parallel.txt"))
+            {
+
+                for (int i = 0; i < lengthscomp.Count; i++)
+                    outf.WriteLine(lengthscomp[i].ToString());
+
+                for (int i = 0; i < noteStartscomp.Count; i++)
+                    outf.WriteLine(noteStartscomp[i].ToString());
+
+                for (int i = 0; i < noteStopscomp.Count; i++)
+                    outf.WriteLine(noteStopscomp[i].ToString());
+
+                for (int i = 0; i < pitchescomp.Count; i++)
+                    outf.WriteLine(pitchescomp[i].ToString());
+
             }
 
 
@@ -1255,7 +1292,7 @@ namespace DigitalMusicAnalysis
            
         }
 
-
+     
 
     }
 
