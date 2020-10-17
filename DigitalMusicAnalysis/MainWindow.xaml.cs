@@ -15,7 +15,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Runtime.ConstrainedExecution;
 
-namespace DigitalMusicAnalysis  
+namespace DigitalMusicAnalysis
 {
     public partial class MainWindow : Window
     {
@@ -28,7 +28,7 @@ namespace DigitalMusicAnalysis
         private Complex[] twiddles;
         private Complex[] compX;
         private string filename;
-        public static int numThreads = 1; /// <summary>
+        public static int numThreads = 4; /// <summary>
 
         List<int> lengthscomp;
         List<int> noteStartscomp;
@@ -37,11 +37,11 @@ namespace DigitalMusicAnalysis
 
         /// / This num of threads variable needs to be changed
         /// </summary>
-        ParallelOptions parallelProgram = new ParallelOptions { MaxDegreeOfParallelism = numThreads}; 
+        ParallelOptions parallelProgram = new ParallelOptions { MaxDegreeOfParallelism = numThreads };
         /// <summary>
         /// change this orientation
         /// </summary>
-     
+
         private enum pitchConv { C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B };
         private double bpm = 70;
 
@@ -49,7 +49,7 @@ namespace DigitalMusicAnalysis
         {
 
             //numThreads = (Environment.ProcessorCount / Environment.ProcessorCount) * 2; // This naming convention also needs to be changed !!!!!!  
-            
+
 
             InitializeComponent();
             filename = openFile("Select Audio (wav) file");
@@ -80,9 +80,9 @@ namespace DigitalMusicAnalysis
             //Console.WriteLine("freqDomain function timer counter stop. Execution Time: {0} secs \n", freqDomainTimer.Elapsed);
 
             // Timer for sheetmusic 
-          
+
             sheetmusic = readXML(xmlfile);
- 
+
 
 
             // Timer for onSetDetection
@@ -95,22 +95,22 @@ namespace DigitalMusicAnalysis
 
 
             // Timer for loadImage
-          
+
             loadImage();
- 
+
 
 
 
             // Timer for loadHistogram
-        
-            loadHistogram();  
-    
+
+            loadHistogram();
+
 
 
             // Timer for Playback
-   
+
             playBack();
-       
+
 
 
             check.Start();
@@ -361,10 +361,11 @@ namespace DigitalMusicAnalysis
                     pixelArray[jj * stftRep.timeFreqData[0].Length + ii] = stftRep.timeFreqData[jj][ii];
                 }
             }
-           
+
         }
 
-     
+
+      
 
         // Onset Detection function - Determines Start and Finish times of a note and the frequency of the note over each duration.
 
@@ -374,7 +375,8 @@ namespace DigitalMusicAnalysis
             int starts = 0;
             int stops = 0;
             Complex[] Y;
-            double[] absY;
+             
+           double[] absY;
             List<int> lengths;
             List<int> noteStarts;
             List<int> noteStops;
@@ -397,7 +399,7 @@ namespace DigitalMusicAnalysis
 
             HFC = new float[stftRep.timeFreqData[0].Length];
 
-            Parallel.For(0, stftRep.timeFreqData[0].Length, parallelProgram ,jj =>
+            Parallel.For(0, stftRep.timeFreqData[0].Length, parallelProgram, jj =>
             //for (int jj = 0; jj < stftRep.timeFreqData[0].Length; jj++)
             {
                 for (int ii = 0; ii < stftRep.wSamp / 2; ii++)
@@ -408,7 +410,7 @@ namespace DigitalMusicAnalysis
             });
 
             float maxi = HFC.Max();
-             
+
             for (int jj = 0; jj < stftRep.timeFreqData[0].Length; jj++)
             {
                 HFC[jj] = (float)Math.Pow((HFC[jj] / maxi), 2);
@@ -736,7 +738,7 @@ namespace DigitalMusicAnalysis
             }
 
             using (var outf = new StreamWriter("datafreq_parallel.txt.txt"))
-                
+
             {
                 for (int i = 0; i < pixelArray.Length; i++)
                     outf.WriteLine(pixelArray[i].ToString());
@@ -809,7 +811,7 @@ namespace DigitalMusicAnalysis
             playback = new WaveOut();
             playback.Init(waveReader);
             playback.Play();
-            
+
         }
 
         // Updating thread - Gets position in music file, uses it as slider value.
@@ -911,7 +913,7 @@ namespace DigitalMusicAnalysis
 
 
         }
-        
+
 
         private musicNote[] readXML(string filename)
         {
@@ -1199,7 +1201,7 @@ namespace DigitalMusicAnalysis
 
             int ii = (A.Length);
             int jj = (B.Length);
-            
+
 
             while (ii > 0 && jj > 0)
             {
@@ -1289,10 +1291,10 @@ namespace DigitalMusicAnalysis
 
             return false;
 
-           
+
         }
 
-     
+
 
     }
 
