@@ -211,6 +211,7 @@ namespace DigitalMusicAnalysis
 
             SolidColorBrush myBrush = new SolidColorBrush(Colors.Black);
 
+
             //Lowest Octif
 
             Rectangle[] lowestRects = null;
