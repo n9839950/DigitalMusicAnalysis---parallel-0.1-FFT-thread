@@ -119,22 +119,25 @@ namespace DigitalMusicAnalysis
 
             executionTimer.Stop();
 
+            // TEST DATA COMP   
+
             //string stfttimer = string.Format("STFT function time taken : {0} secs", timefreq.stftWatch);
             //Console.WriteLine(stfttimer);
             Console.WriteLine("DigitalMusicAnalysis Program timer counter stop. Execution Time: {0} secs \n", executionTimer.Elapsed);
 
             writingparalleldata();
-            bool a = FileEquals("C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq.txt",
-               "C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq_parallel0.1.txt");
+            //bool a = FileEquals("C:\\Users\\n9839950\\source\\repos\\DigitalMusicAnalysis---parallel-0.1-FFT-thread\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq.txt",
+            //   "C:\\Users\\n9839950\\source\\repos\\DigitalMusicAnalysis---parallel-0.1-FFT-thread\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\datafreq_parallel.txt");
 
 
-            bool b = FileEquals("C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\ondetectiondata.txt",
-               "C:\\Users\\n9860665\\Desktop\\version0.2\\DigitalMusicAnalysis - parallel 0.1\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\ondetectiondata_parallel.txt");
+            //bool b = FileEquals("C:\\Users\\n9839950\\source\\repos\\DigitalMusicAnalysis-- - parallel - 0.1 - FFT - thread\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\ondetectiondata.txt",
+                
+            //   "C:\\Users\\n9839950\\source\\repos\\DigitalMusicAnalysis-- - parallel - 0.1 - FFT - thread\\DigitalMusicAnalysis\\bin\\Release\\netcoreapp3.1\\ondetectiondata_parallel.txt");
 
+       
 
-
-            Console.WriteLine(a);
-            Console.WriteLine(b);
+            //Console.WriteLine(a);
+            //Console.WriteLine(b);
             slider1.ValueChanged += updateHistogram;
             playback.PlaybackStopped += closeMusic;
 
@@ -366,7 +369,54 @@ namespace DigitalMusicAnalysis
         }
 
 
-      
+        private Complex[] fftnew(Complex[] x, int L, Complex[] tempTwiddles)
+        {
+            int ii = 0;
+            int kk = 0;
+            int N = x.Length;
+
+            Complex[] Y = new Complex[N];
+
+            if (N == 1)
+            {
+                Y[0] = x[0];
+            }
+            else
+            {
+
+                Complex[] E = new Complex[N / 2];
+                Complex[] O = new Complex[N / 2];
+                Complex[] even = new Complex[N / 2];
+                Complex[] odd = new Complex[N / 2];
+
+                for (ii = 0; ii < N; ii++)
+                {
+
+                    if (ii % 2 == 0)
+                    {
+                        even[ii / 2] = x[ii];
+                    }
+                    if (ii % 2 == 1)
+                    {
+                        odd[(ii - 1) / 2] = x[ii];
+                    }
+                }
+
+                E = fftnew(even, L, tempTwiddles);
+                O = fftnew(odd, L, tempTwiddles);
+
+                for (kk = 0; kk < N; kk++)
+                {
+                    Y[kk] = E[(kk % (N / 2))] + O[(kk % (N / 2))] * tempTwiddles[kk * (L / N)];
+                }
+            }
+
+            return Y;
+
+
+        }
+
+
 
         // Onset Detection function - Determines Start and Finish times of a note and the frequency of the note over each duration.
 
@@ -375,9 +425,9 @@ namespace DigitalMusicAnalysis
             float[] HFC;
             int starts = 0;
             int stops = 0;
-            Complex[] Y;
+            //Complex[] Y;
              
-           double[] absY;
+           //double[] absY;
             List<int> lengths;
             List<int> noteStarts;
             List<int> noteStops;
@@ -391,6 +441,8 @@ namespace DigitalMusicAnalysis
             noteStops = new List<int>(100);
             lengths = new List<int>(100);
             pitches = new List<double>(100);
+
+            double[] allpitches = new double[100]; // to store tempitches 
 
             SolidColorBrush sheetBrush = new SolidColorBrush(Colors.Black);
             SolidColorBrush ErrorBrush = new SolidColorBrush(Colors.Red);
@@ -453,87 +505,120 @@ namespace DigitalMusicAnalysis
                 lengths.Add(noteStops[ii] - noteStarts[ii]);
             }
 
+            // PARALLEL WHOLE MM LOOP 
+            // START MM LOOP
+           
+
+            Parallel.For(0, lengths.Count, new ParallelOptions { MaxDegreeOfParallelism = numThreads }, mm =>
+
+           {
+               int nearest = (int)Math.Pow(2, Math.Ceiling(Math.Log(lengths[mm], 2)));
+               twiddles = new Complex[nearest];
+
+               //Complex[] yArrays = new Complex[nearest];
+               Complex[] tempTwiddles = new Complex[nearest];
+               Complex[] tempCompx = new Complex[nearest];
+               Complex[] Y;
+
+               double[] absY;
+
+
+               //Parallel.For(0, nearest, parallelProgram, ll =>
+               //{
+               //    double a = 2 * pi * ll / (double)nearest;
+               //    twiddles[ll] = Complex.Pow(Complex.Exp(-i), (float)a);
+               //});
+
+
+               for (int ll = 0; ll < nearest; ll++)
+               {
+                   double a = 2 * pi * ll / (double)nearest;
+                   tempTwiddles[ll] = Complex.Pow(Complex.Exp(-i), (float)a);
+
+                   
+               }
+
+               compX = new Complex[nearest];
+               for (int kk = 0; kk < nearest; kk++)
+               {
+                   if (kk < lengths[mm] && (noteStarts[mm] + kk) < waveIn.wave.Length)
+                   {
+                       tempCompx[kk] = waveIn.wave[noteStarts[mm] + kk];
+                   }
+                   else
+                   {
+                       tempCompx[kk] = Complex.Zero;
+                   }
+
+
+               }
+
+               Y = new Complex[nearest];
+
+               Y = fftnew(tempCompx, nearest,tempTwiddles);
+
+               absY = new double[nearest];
+
+               double maximum = 0;
+               int maxInd = 0;
+
+               for (int jj = 0; jj < Y.Length; jj++)
+               {
+                   absY[jj] = Y[jj].Magnitude;
+                   if (absY[jj] > maximum)
+                   {
+                       maximum = absY[jj];
+                       maxInd = jj;
+                   }
+               }
+
+               for (int div = 6; div > 1; div--)
+               {
+
+                   if (maxInd > nearest / 2)
+                   {
+                       if (absY[(int)Math.Floor((double)(nearest - maxInd) / div)] / absY[(maxInd)] > 0.10)
+                       {
+                           maxInd = (nearest - maxInd) / div;
+                       }
+                   }
+                   else
+                   {
+                       if (absY[(int)Math.Floor((double)maxInd / div)] / absY[(maxInd)] > 0.10)
+                       {
+                           maxInd = maxInd / div;
+                       }
+                   }
+               }
+
+               if (maxInd > nearest / 2)
+               {
+                   //pitches.Add((nearest - maxInd) * waveIn.SampleRate / nearest);
+                   allpitches[mm] = ((nearest - maxInd) * waveIn.SampleRate / nearest);
+
+               }
+               else
+               {
+                   //pitches.Add(maxInd * waveIn.SampleRate / nearest);
+                   allpitches[mm] = (maxInd * waveIn.SampleRate / nearest); 
+               }
+
+
+           });
+
             for (int mm = 0; mm < lengths.Count; mm++)
             {
-                int nearest = (int)Math.Pow(2, Math.Ceiling(Math.Log(lengths[mm], 2)));
-                twiddles = new Complex[nearest];
-
-
-                Parallel.For(0, nearest, parallelProgram, ll =>
+                if (allpitches[mm] != 0)
                 {
-                    double a = 2 * pi * ll / (double)nearest;
-                    twiddles[ll] = Complex.Pow(Complex.Exp(-i), (float)a);
-                });
-
-
-                //for (int ll = 0; ll < nearest; ll++)
-                //{
-                //    double a = 2 * pi * ll / (double)nearest;
-                //    twiddles[ll] = Complex.Pow(Complex.Exp(-i), (float)a);
-                //}
-
-                compX = new Complex[nearest];
-                for (int kk = 0; kk < nearest; kk++)
-                {
-                    if (kk < lengths[mm] && (noteStarts[mm] + kk) < waveIn.wave.Length)
-                    {
-                        compX[kk] = waveIn.wave[noteStarts[mm] + kk];
-                    }
-                    else
-                    {
-                        compX[kk] = Complex.Zero;
-                    }
+                    pitches.Add(allpitches[mm]);
                 }
-
-                Y = new Complex[nearest];
-
-                Y = fft(compX, nearest);
-
-                absY = new double[nearest];
-
-                double maximum = 0;
-                int maxInd = 0;
-
-                for (int jj = 0; jj < Y.Length; jj++)
-                {
-                    absY[jj] = Y[jj].Magnitude;
-                    if (absY[jj] > maximum)
-                    {
-                        maximum = absY[jj];
-                        maxInd = jj;
-                    }
-                }
-
-                for (int div = 6; div > 1; div--)
-                {
-
-                    if (maxInd > nearest / 2)
-                    {
-                        if (absY[(int)Math.Floor((double)(nearest - maxInd) / div)] / absY[(maxInd)] > 0.10)
-                        {
-                            maxInd = (nearest - maxInd) / div;
-                        }
-                    }
-                    else
-                    {
-                        if (absY[(int)Math.Floor((double)maxInd / div)] / absY[(maxInd)] > 0.10)
-                        {
-                            maxInd = maxInd / div;
-                        }
-                    }
-                }
-
-                if (maxInd > nearest / 2)
-                {
-                    pitches.Add((nearest - maxInd) * waveIn.SampleRate / nearest);
-                }
-                else
-                {
-                    pitches.Add(maxInd * waveIn.SampleRate / nearest);
-                }
-
-
             }
+
+            
+
+            //STOP MM LOOP 
+
+           
 
             musicNote[] noteArray;
             noteArray = new musicNote[noteStarts.Count()];
@@ -738,7 +823,7 @@ namespace DigitalMusicAnalysis
                 }
             }
 
-            using (var outf = new StreamWriter("datafreq_parallel.txt.txt"))
+            using (var outf = new StreamWriter("datafreq_parallel.txt"))
 
             {
                 for (int i = 0; i < pixelArray.Length; i++)
